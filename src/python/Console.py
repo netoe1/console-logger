@@ -3,7 +3,7 @@ from colorama import Fore, Style, init    # Used to apply colors to console outp
 from datetime import datetime             # Used to generate timestamps.
 import inspect                            # Used to inspect the call stack.
 from pathlib import Path                  # Used to manipulate file paths.
-from LogFile import LogFile       # Used to store log messages into a file.
+from src.python.LogFile import LogFile       # Used to store log messages into a file.
 
 
 # Defines all available console message types.
