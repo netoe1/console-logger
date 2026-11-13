@@ -3,24 +3,15 @@ import { EConsoleType, EConsoleHexColors } from "./types/types.js";
 
 const ANSI_RESET = "\x1b[0m";
 const ANSI_BOLD = "\x1b[1m";
-const ANSI_MUTED = "\x1b[38;2;100;116;139m"; // #64748B (timestamp e [arquivo.ts])
+const ANSI_DARK_GRAY = "\x1b[90m"; // Equivalente ao Fore.LIGHTBLACK_EX do Colorama
 
 const FALLBACK_COLORS: Record<EConsoleType, string> = {
-  [EConsoleType.ERROR]: "\x1b[38;2;248;113;113m",
-  [EConsoleType.WARNING]: "\x1b[38;2;251;191;36m",
-  [EConsoleType.INFO]: "\x1b[38;2;56;189;248m",
-  [EConsoleType.SUCCESS]: "\x1b[38;2;74;222;128m",
-  [EConsoleType.LOG]: "\x1b[38;2;226;232;240m",
-  [EConsoleType.DEBUG]: "\x1b[38;2;192;132;252m",
-};
-
-const MESSAGE_TEXT_COLORS: Record<EConsoleType, string> = {
-  [EConsoleType.ERROR]: "\x1b[38;2;254;202;202m",
-  [EConsoleType.WARNING]: "\x1b[38;2;254;243;199m",
-  [EConsoleType.INFO]: "\x1b[38;2;241;245;249m",
-  [EConsoleType.SUCCESS]: "\x1b[38;2;241;245;249m",
-  [EConsoleType.LOG]: "\x1b[38;2;226;232;240m",
-  [EConsoleType.DEBUG]: "\x1b[38;2;233;213;255m",
+  [EConsoleType.ERROR]: "\x1b[31m",
+  [EConsoleType.WARNING]: "\x1b[33m",
+  [EConsoleType.INFO]: "\x1b[36m",
+  [EConsoleType.SUCCESS]: "\x1b[32m",
+  [EConsoleType.LOG]: "\x1b[37m",
+  [EConsoleType.DEBUG]: "\x1b[35m",
 };
 
 export default class Console {
@@ -84,16 +75,11 @@ export default class Console {
     return this.hexToAnsi(rawColor) ?? FALLBACK_COLORS[type];
   }
 
-  private static formatMessages(
-    messages: unknown[],
-    type: EConsoleType,
-  ): string {
-    const textColor = MESSAGE_TEXT_COLORS[type];
-
+  private static formatMessages(messages: unknown[]): string {
     return messages
       .map((item) =>
         typeof item === "string"
-          ? `${textColor}${item}${ANSI_RESET}`
+          ? item
           : inspect(item, {
               colors: true,
               depth: null,
@@ -113,12 +99,12 @@ export default class Console {
     const filename = this.getCallerFile();
     const ansiColor = this.resolveColor(color, type_console);
     const label = type_console.toUpperCase().padEnd(8);
-    const body = this.formatMessages(messages, type_console);
+    const body = this.formatMessages(messages);
 
     const output =
-      `${ANSI_MUTED}${formattedDate}${ANSI_RESET} ` +
+      `${ANSI_DARK_GRAY}${formattedDate}${ANSI_RESET} ` +
       `${ANSI_BOLD}${ansiColor}${label}${ANSI_RESET} ` +
-      `${ANSI_MUTED}[${filename}]${ANSI_RESET} ` +
+      `${ANSI_DARK_GRAY}[${filename}]${ANSI_RESET} ` +
       `${body}`;
 
     switch (type_console) {
@@ -136,7 +122,6 @@ export default class Console {
         break;
     }
 
-    // Versão em texto puro pronta para integração com LogFile.append(rawText)
     const _rawText = `${formattedDate} ${label} [${filename}] ${stripVTControlCharacters(body)}`;
   }
 
