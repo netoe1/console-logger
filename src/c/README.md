@@ -11,7 +11,7 @@ Logger de terminal em C99 com duas opções: uma versão normal (`Console.h` + `
 - `console_error`: erro;
 - `console_debug`: depuração, habilitada por padrão.
 
-Cada mensagem recebe timestamp local. Avisos e erros vão para `stderr`; os outros níveis usam `stdout`. As cores ANSI podem ser desativadas com `console_set_color(false)`.
+Cada mensagem recebe timestamp local. Avisos e erros vão para `stderr`; os outros níveis usam `stdout`. As cores usam sequências ANSI TrueColor para combinar com a paleta da versão TypeScript e podem ser desativadas com `console_set_color(false)`.
 
 ## Versão normal
 
