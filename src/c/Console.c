@@ -1,68 +1,108 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <time.h>
+#include "Console.h"
+
 #include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
 
-bool debug_ativado = true;
+static bool debug_enabled = true;
+static bool color_enabled = true;
 
-// Cores ANSI (Estilo ts-node)
-#define COLOR_RESET   "\033[0m"
-#define COLOR_GRAY    "\033[90m"
-#define COLOR_GREEN   "\033[32m"
-#define COLOR_CYAN    "\033[36m"
-#define COLOR_YELLOW  "\033[33m"
-#define COLOR_RED     "\033[31m"
-#define COLOR_BLUE    "\033[34m" // Azul escuro
+static void print_message(const char *level, const char *color, FILE *stream,
+                          const char *format, va_list args)
+{
+    time_t now = time(NULL);
+    struct tm *local_time = localtime(&now);
+    char timestamp[20];
 
-void console_log_impl(const char *level, const char *level_color, const char *file, int line, const char *fmt, ...) {
-    time_t rawtime;
-    struct tm *timeinfo;
-    char time_buf[20];
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-    strftime(time_buf, sizeof(time_buf), "%H:%M:%S", timeinfo);
+    if (format == NULL) {
+        return;
+    }
 
-    // Bloco do nível: [LOG], [INFO], [WARN], [DEBUG], [ERROR]
-    char level_buf[12];
-    snprintf(level_buf, sizeof(level_buf), "[%s]", level);
+    if (local_time == NULL ||
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", local_time) == 0) {
+        (void)snprintf(timestamp, sizeof(timestamp), "unknown-time");
+    }
 
-    // Bloco do arquivo + linha com dois pontos colados: [Console.c:50]:
-    char location_buf[36];
-    snprintf(location_buf, sizeof(location_buf), "[%s:%d]:", file, line);
+    if (color_enabled) {
+        (void)fprintf(stream, "\033[90m%s\033[0m \033[1m%s%s\033[0m ",
+                      timestamp, color, level);
+    } else {
+        (void)fprintf(stream, "%s %-7s ", timestamp, level);
+    }
 
-    // Formatação alinhada em colunas
-    printf("%s%-9s%s %s%s%s %s%-18s" COLOR_RESET " ", 
-           level_color, level_buf, COLOR_RESET, 
-           COLOR_GRAY, time_buf, COLOR_RESET, 
-           COLOR_GRAY, location_buf);
-
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-
-    printf(";\n");
+    (void)vfprintf(stream, format, args);
+    (void)fputc('\n', stream);
 }
 
-// Macros públicas
-#define ConsoleLog(...)   console_log_impl("LOG",   COLOR_GREEN,   __FILE__, __LINE__, __VA_ARGS__)
-#define ConsoleInfo(...)  console_log_impl("INFO",  COLOR_CYAN,    __FILE__, __LINE__, __VA_ARGS__)
-#define ConsoleWarn(...)  console_log_impl("WARN",  COLOR_YELLOW,  __FILE__, __LINE__, __VA_ARGS__)
-#define ConsoleError(...) console_log_impl("ERROR", COLOR_RED,     __FILE__, __LINE__, __VA_ARGS__)
+void console_log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    print_message("LOG", "\033[37m", stdout, format, args);
+    va_end(args);
+}
 
-#define ConsoleDebug(...) \
-    do { \
-        if (debug_ativado) { \
-            console_log_impl("DEBUG", COLOR_BLUE, __FILE__, __LINE__, __VA_ARGS__); \
-        } \
-    } while(0)
+void console_info(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    print_message("INFO", "\033[36m", stdout, format, args);
+    va_end(args);
+}
 
-int main(void) {
-    ConsoleLog("Aplicação inicializada com sucesso");
-    ConsoleInfo("Servidor escutando na porta 3000");
-    ConsoleWarn("Uso de memória acima de 80%%");
-    ConsoleDebug("Objeto de contexto carregado na memória");
-    ConsoleError("Conexão interrompida pelo host");
+void console_success(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    print_message("SUCCESS", "\033[32m", stdout, format, args);
+    va_end(args);
+}
 
-    return 0;
+void console_warn(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    print_message("WARN", "\033[33m", stderr, format, args);
+    va_end(args);
+}
+
+void console_error(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    print_message("ERROR", "\033[31m", stderr, format, args);
+    va_end(args);
+}
+
+void console_debug(const char *format, ...)
+{
+    va_list args;
+
+    if (!debug_enabled) {
+        return;
+    }
+
+    va_start(args, format);
+    print_message("DEBUG", "\033[35m", stdout, format, args);
+    va_end(args);
+}
+
+void console_set_debug(bool enabled)
+{
+    debug_enabled = enabled;
+}
+
+bool console_is_debug_enabled(void)
+{
+    return debug_enabled;
+}
+
+void console_set_color(bool enabled)
+{
+    color_enabled = enabled;
+}
+
+bool console_is_color_enabled(void)
+{
+    return color_enabled;
 }
