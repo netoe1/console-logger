@@ -7,9 +7,6 @@ int main(void)
     assert(console_is_debug_enabled());
     assert(console_is_color_enabled());
 
-    console_set_color(false);
-    assert(!console_is_color_enabled());
-
     console_log("test log");
     console_info("test info");
     console_success("test success");
@@ -23,6 +20,8 @@ int main(void)
 
     console_set_debug(true);
     assert(console_is_debug_enabled());
+    console_set_color(false);
+    assert(!console_is_color_enabled());
     console_set_color(true);
     assert(console_is_color_enabled());
 
