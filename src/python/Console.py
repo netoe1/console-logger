@@ -1,129 +1,85 @@
-from enum import Enum
-from colorama import Fore, Style, init    # Used to apply colors to console output.
-from datetime import datetime             # Used to generate timestamps.
-import inspect                            # Used to inspect the call stack.
-from pathlib import Path                  # Used to manipulate file paths.
-from src.python.LogFile import LogFile       # Used to store log messages into a file.
-
-
-# Defines all available console message types.
-class ConsoleType(Enum):
-    LOG = "LOG"
-    INFO = "INFO"
-    WARN = "WARN"
-    ERROR = "ERROR"
-    DEBUG = "DEBUG"
-    SUCCESS = "SUCCESS"
-
-
-# Initializes Colorama and automatically resets colors after each print.
-init(autoreset=True)
+from datetime import datetime
+import inspect
+from pathlib import Path
 
 
 class Console:
+    """Logger simples para terminal, com níveis e modo debug configurável."""
 
-    # Controls whether debug messages should be displayed.
-    __debug_is_active = True
+    _debug_ativo = True
+    _reset = "\033[0m"
+    _cinza = "\033[90m"
 
-    # Maps each log level to its respective console color.
-    COLORS = {
-        "LOG": Fore.WHITE,
-        "INFO": Fore.CYAN,
-        "WARN": Fore.YELLOW,
-        "ERROR": Fore.RED,
-        "SUCCESS": Fore.GREEN,
-        "DEBUG": Fore.MAGENTA,
+    # Cores ANSI TrueColor, alinhadas à versão TypeScript.
+    _cores = {
+        "LOG": "\033[38;2;255;255;255m",
+        "INFO": "\033[38;2;0;229;255m",
+        "SUCCESS": "\033[38;2;0;230;118m",
+        "WARN": "\033[38;2;255;214;10m",
+        "ERROR": "\033[38;2;255;69;58m",
+        "DEBUG": "\033[38;2;224;64;251m",
     }
 
-    @classmethod
-    def _caller_file(cls):
-        """
-        Returns the filename that initiated the current log call.
-        """
-        frame = inspect.stack()[3]
-        return Path(frame.filename).name
+    @staticmethod
+    def _arquivo_chamador():
+        """Retorna o nome do arquivo que chamou o método de log."""
+        frame = inspect.currentframe()
+        if frame is None:
+            return "unknown"
+
+        # A pilha é: este método -> _escrever -> nível público -> aplicação.
+        chamador = frame.f_back.f_back.f_back
+        nome = Path(chamador.f_code.co_filename).name if chamador else "unknown"
+        del frame  # Evita manter referências à pilha depois de retornar.
+        return nome
 
     @classmethod
-    def __write(cls, level: str, message: str):
+    def _escrever(cls, nivel, mensagem):
+        """Formata e imprime uma mensagem; todos os níveis passam por aqui."""
+        horario = datetime.now().strftime("%H:%M:%S")
+        arquivo = cls._arquivo_chamador()
+        cor_nivel = cls._cores[nivel]
 
-        # Generates the current timestamp.
-        timestamp = datetime.now().strftime("%H:%M:%S")
-
-        # Gets the filename of the calling script.
-        filename = cls._caller_file()
-
-        # Retrieves the color configured for the current log level.
-        level_color = cls.COLORS[level]
-
-        # Prints a formatted and colored message to the terminal.
         print(
-            f"{Fore.LIGHTBLACK_EX}{timestamp}{Style.RESET_ALL} "
-            f"{level_color}{level:<8}{Style.RESET_ALL} "
-            f"{Fore.LIGHTBLACK_EX}[{filename}]{Style.RESET_ALL} "
-            f"{message}"
+            f"{cls._cinza}{horario}{cls._reset} "
+            f"{cor_nivel}{nivel:<8}{cls._reset} "
+            f"{cls._cinza}[{arquivo}]{cls._reset} "
+            f"{mensagem}"
         )
 
-        # Creates a plain-text version of the log entry for file storage.
-        raw_text = (
-            f"{timestamp} "
-            f"{level:<8} "
-            f"[{filename}] "
-            f"{message}"
-        )
-
-        # Adds the log entry to the log file buffer.
-        LogFile.append(raw_text)
+    # Os métodos públicos só escolhem o nível e encaminham a mensagem.
+    @classmethod
+    def log(cls, mensagem):
+        cls._escrever("LOG", mensagem)
 
     @classmethod
-    def log(cls, message):
-        """
-        Writes a generic log message.
-        """
-        cls.__write("LOG", message)
+    def info(cls, mensagem):
+        cls._escrever("INFO", mensagem)
 
     @classmethod
-    def info(cls, message):
-        """
-        Writes an informational message.
-        """
-        cls.__write("INFO", message)
+    def success(cls, mensagem):
+        cls._escrever("SUCCESS", mensagem)
 
     @classmethod
-    def warn(cls, message):
-        """
-        Writes a warning message.
-        """
-        cls.__write("WARN", message)
+    def warn(cls, mensagem):
+        cls._escrever("WARN", mensagem)
 
     @classmethod
-    def error(cls, message):
-        """
-        Writes an error message.
-        """
-        cls.__write("ERROR", message)
+    def error(cls, mensagem):
+        cls._escrever("ERROR", mensagem)
 
     @classmethod
-    def success(cls, message):
-        """
-        Writes a success message.
-        """
-        cls.__write("SUCCESS", message)
+    def debug(cls, mensagem):
+        # Mensagens debug são ignoradas quando o modo está desligado.
+        if cls._debug_ativo:
+            cls._escrever("DEBUG", mensagem)
 
     @classmethod
-    def debug(cls, message):
-        """
-        Writes a debug message only when debug mode is enabled.
-        """
-        if(cls.__debug_is_active == True):
-            cls.__write("DEBUG", message)
-
-    @classmethod
-    def set_debug_mode(cls, state: bool):
-        """
-        Enables or disables debug messages.
-        """
-        cls.__debug_is_active = state
+    def set_debug_mode(cls, ativo):
+        """Ativa ou desativa a impressão de mensagens debug."""
+        cls._debug_ativo = ativo
 
     @classmethod
     def is_debug_mode_active(cls):
-        return cls.__debug_is_active
+        """Informa se o modo debug está ativo."""
+        return cls._debug_ativo
