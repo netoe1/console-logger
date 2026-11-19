@@ -1,3 +1,1 @@
-colorama
-pathlib
-inspect
+# Esta versão usa apenas a biblioteca padrão do Python.
