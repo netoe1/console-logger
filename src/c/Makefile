@@ -1,4 +1,4 @@
-CC ?= cc
+CC ?= gcc
 AR ?= ar
 CFLAGS ?= -std=c99 -Wall -Wextra -Wpedantic -O2
 ARFLAGS = rcs
@@ -29,13 +29,19 @@ test: $(TEST_PROGRAM) $(PORTABLE_TEST_PROGRAM)
 	trap 'rm -f tests/stdout.tmp tests/stderr.tmp' EXIT HUP INT TERM; \
 	for program in $(TEST_PROGRAM) $(PORTABLE_TEST_PROGRAM); do \
 	  ./$$program > tests/stdout.tmp 2> tests/stderr.tmp; \
-	  grep -F 'LOG     test log' tests/stdout.tmp >/dev/null; \
-	  grep -F 'INFO    test info' tests/stdout.tmp >/dev/null; \
-	  grep -F 'SUCCESS test success' tests/stdout.tmp >/dev/null; \
-	  grep -F 'DEBUG   test debug enabled' tests/stdout.tmp >/dev/null; \
+	  grep -F 'test log' tests/stdout.tmp >/dev/null; \
+	  grep -F 'test info' tests/stdout.tmp >/dev/null; \
+	  grep -F 'test success' tests/stdout.tmp >/dev/null; \
+	  grep -F 'test debug enabled' tests/stdout.tmp >/dev/null; \
+	  grep -F '38;2;255;255;255m' tests/stdout.tmp >/dev/null; \
+	  grep -F '38;2;0;229;255m' tests/stdout.tmp >/dev/null; \
+	  grep -F '38;2;0;230;118m' tests/stdout.tmp >/dev/null; \
+	  grep -F '38;2;224;64;251m' tests/stdout.tmp >/dev/null; \
 	  if grep -F 'test debug disabled' tests/stdout.tmp >/dev/null; then exit 1; fi; \
-	  grep -F 'WARN    test warning' tests/stderr.tmp >/dev/null; \
-	  grep -F 'ERROR   test error' tests/stderr.tmp >/dev/null; \
+	  grep -F 'test warning' tests/stderr.tmp >/dev/null; \
+	  grep -F 'test error' tests/stderr.tmp >/dev/null; \
+	  grep -F '38;2;255;214;10m' tests/stderr.tmp >/dev/null; \
+	  grep -F '38;2;255;69;58m' tests/stderr.tmp >/dev/null; \
 	done; \
 	echo 'Todos os testes passaram.'
 
