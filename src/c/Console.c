@@ -38,7 +38,7 @@ void console_log(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    print_message("LOG", "\033[37m", stdout, format, args);
+    print_message("LOG", "\033[38;2;255;255;255m", stdout, format, args);
     va_end(args);
 }
 
@@ -46,7 +46,7 @@ void console_info(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    print_message("INFO", "\033[36m", stdout, format, args);
+    print_message("INFO", "\033[38;2;0;229;255m", stdout, format, args);
     va_end(args);
 }
 
@@ -54,7 +54,7 @@ void console_success(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    print_message("SUCCESS", "\033[32m", stdout, format, args);
+    print_message("SUCCESS", "\033[38;2;0;230;118m", stdout, format, args);
     va_end(args);
 }
 
@@ -62,7 +62,7 @@ void console_warn(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    print_message("WARN", "\033[33m", stderr, format, args);
+    print_message("WARN", "\033[38;2;255;214;10m", stderr, format, args);
     va_end(args);
 }
 
@@ -70,7 +70,7 @@ void console_error(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    print_message("ERROR", "\033[31m", stderr, format, args);
+    print_message("ERROR", "\033[38;2;255;69;58m", stderr, format, args);
     va_end(args);
 }
 
@@ -83,7 +83,7 @@ void console_debug(const char *format, ...)
     }
 
     va_start(args, format);
-    print_message("DEBUG", "\033[35m", stdout, format, args);
+    print_message("DEBUG", "\033[38;2;224;64;251m", stdout, format, args);
     va_end(args);
 }
 
